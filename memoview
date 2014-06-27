@@ -1,0 +1,159 @@
+#!/usr/bin/wish
+# @(#) Mini text viewer. Version 1.0.0.20140107
+# worked on Tcl/TK (wish) 8.4
+
+# Copyright (c) 2014 eel3
+#
+# This software is provided 'as-is', without any express or implied
+# warranty. In no event will the authors be held liable for any damages
+# arising from the use of this software.
+#
+# Permission is granted to anyone to use this software for any purpose,
+# including commercial applications, and to alter it and redistribute it
+# freely, subject to the following restrictions:
+#
+#     1. The origin of this software must not be misrepresented; you must not
+#     claim that you wrote the original software. If you use this software
+#     in a product, an acknowledgment in the product documentation would be
+#     appreciated but is not required.
+#
+#     2. Altered source versions must be plainly marked as such, and must not be
+#     misrepresented as being the original software.
+#
+#     3. This notice may not be removed or altered from any source
+#     distribution.
+
+set auto_noexec 1
+
+# Read file at $path and return all text as string.
+# On failure, return 0 length string.
+proc readfile {path} {
+	if {[catch {set input [open $path r]}]} {
+		return ""
+	}
+	set text [read $input]
+	close $input
+	return $text
+}
+
+# Reload file and display its text.
+proc reload {} {
+	global filepath
+	global progname
+
+	if {$filepath eq ""} {
+		return
+	}
+	wm title . "$progname - [file tail $filepath]"
+	.textarea configure -state normal
+	.textarea delete @1,1 end
+	.textarea insert end [readfile $filepath]
+	.textarea configure -state disabled
+}
+
+# 1. Open file dialog.
+# 2. Read selected file and display its text.
+proc openfile {} {
+	global filepath
+	set types {
+		{{All Files} {*}}
+		{{Text File} {.txt}}
+	}
+
+	set newpath [tk_getOpenFile -filetypes $types]
+	if {$newpath eq ""} {
+		return
+	}
+	set filepath $newpath
+	reload
+}
+
+# This procedure is called at exit.
+proc my_exit {} {
+	destroy .
+	exit 0
+}
+
+# Open about dialog.
+proc about {} {
+	global progname
+
+	tk_messageBox -type ok -icon info \
+		-title "$progname - About" \
+		-message "$progname 1.0.0"
+}
+
+# Open help dialog (show options), and then quit application.
+# (Use this procedure when application is not initialized)
+proc usage {status} {
+	global progname
+
+	wm withdraw .
+
+	set icontype [if {$status == 0} {subst info} else {subst error}]
+	tk_messageBox -type ok -icon $icontype \
+		-title "$progname - Usage" \
+		-message "Usage: $progname \[-- \[-h|--help|<file>]]"
+
+	destroy .
+	exit $status
+}
+
+# Initialize application.
+proc init {argv0 argc argv} {
+	global progname
+	global filepath
+
+	set progname [file tail $argv0]
+	wm title . $progname
+
+	if {$argc >= 2} {
+		usage 1
+	}
+	set filepath [if {$argc >= 1} {lindex $argv 0} else {subst ""}]
+	switch -- $filepath {
+		-h     {usage 0}
+		--help {usage 0}
+	}
+
+	# UI
+	frame .menubar -borderwidth 1 -relief raised
+	pack .menubar -fill x
+
+	menubutton .menubar.file -text "File" -menu .menubar.file.m
+	pack .menubar.file -side left
+	menu .menubar.file.m -tearoff no
+	.menubar.file.m add command -command openfile -label "Open"   -accelerator "Ctrl+O"
+	.menubar.file.m add command -command reload   -label "Reload" -accelerator "F5, Ctrl+R"
+	.menubar.file.m add command -command my_exit  -label "Exit"   -accelerator "Alt+F4, Ctrl+Q"
+
+	menubutton .menubar.help -text "Help" -menu .menubar.help.m
+	pack .menubar.help -side left
+	menu .menubar.help.m -tearoff no
+	.menubar.help.m add command -command about -label "About"
+
+	text .textarea \
+		-width 50 -height 15 \
+		-background yellow \
+		-font {{MS UI Gothic} 11} \
+		-wrap char \
+		-yscrollcommand {.vscroll set}
+	pack .textarea -expand yes -fill both -side left
+	scrollbar .vscroll -orient vertical -command {.textarea yview}
+	pack .vscroll -fill both -side left
+
+	# shortcut key
+	bind . <Control-Key-o> openfile
+	bind . <Key-F5> reload
+	bind . <Control-Key-r> reload
+	bind . <Alt-Key-F4> my_exit
+	bind . <Control-Key-q> my_exit
+	wm protocol . WM_DELETE_WINDOW my_exit
+
+	# Initialize view
+	reload
+	focus .textarea
+}
+
+# Start initialization.
+init $argv0 $argc $argv
