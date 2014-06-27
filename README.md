@@ -1,0 +1,4 @@
+memoview
+========
+
+Mini text viewer
