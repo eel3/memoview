@@ -1,4 +1,6 @@
 #!/usr/bin/wish
+# -*- coding: utf-8-unix -*-
+# vim:fileencoding=utf-8:ff=unix
 # @(#) Mini text viewer. Version 1.0.0.20140107
 # worked on Tcl/TK (wish) 8.4
 
