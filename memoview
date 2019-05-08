@@ -1,7 +1,7 @@
-#!/usr/bin/wish
+#!/usr/bin/env wish
 # -*- coding: utf-8-unix -*-
 # vim:fileencoding=utf-8:ff=unix
-# @(#) Mini text viewer. Version 1.0.0.20140107
+# @(#) Mini text viewer. Version 1.0.1.20190410
 # worked on Tcl/TK (wish) 8.4
 
 # Copyright (c) 2014 eel3
@@ -82,7 +82,7 @@ proc about {} {
 
 	tk_messageBox -type ok -icon info \
 		-title "$progname - About" \
-		-message "$progname 1.0.0"
+		-message "$progname 1.0.1"
 }
 
 # Open help dialog (show options), and then quit application.
